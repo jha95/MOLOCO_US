@@ -1,0 +1,99 @@
+---
+title: "Adops & Data Scientist Sample Data - Q2 Regression"
+author: "Jae Hyun Ha"
+output:
+  pdf_document: default
+  html_document: default
+---
+The data contains 300 rows and 3 columns (from the left, A, B, and C). Please build a good regression model which explains column C by a function of  A and B.  
+
+Note: Please do not use any ML libraries or packages. You can simply attach plot of data points and your regression model that fits the data points and of course, code point (preferably Github).   
+
+import data  
+```{r message=FALSE, warning=FALSE}
+data <- read.csv("D:/Job Search/Adops & Data Scientist Sample Data - Q2 Regression.csv")
+d <- data.frame(data)
+colnames(d) <- c('A','B','C')
+A <- d$A
+B <- d$B
+C <- d$C
+```
+
+Finding the best Regression Model  
+
+
+We try a simple multiple linear regression fit on the model to check the its goodness of fit  
+```{r message=FALSE, warning=FALSE}
+fit <- lm(C ~ A+B)
+summary(fit)
+anova(fit)
+par(mfrow=c(2,3))
+plot(fit, col="red")
+hist(rstudent(fit), col="red")
+```
+
+
+The fit is very bad as you can see by the R-quared value of 0.006037. You can also see from the histogram that the distribution is not normal and is very skwed. There are multiple approaches to fix these issues by modifying the model. Based on the plots we will look at how we can fix some of the issues that can be seen in the data.  
+
+
+We will try a log fit model. This will fix any non-linearity, outliers, and bunching in the x axis.  
+```{r message=FALSE, warning=FALSE}
+logfit <- lm(C ~ log(A)+log(B))
+summary(logfit)
+anova(logfit)
+par(mfrow=c(2,3))
+plot(logfit, col="orange")
+hist(rstudent(logfit), col="orange")
+```
+
+
+The the results are better but the fit is only moderately good. The standardized residuals are still not normally distributed. To account for any bunching in the y axis and any outliers with high leverage we will try a log-log fit.  
+```{r message=FALSE, warning=FALSE}
+loglogfit <- lm(log(C) ~ log(A)+log(B))
+summary(loglogfit)
+anova(loglogfit)
+par(mfrow=c(2,3))
+plot(loglogfit, col="gold")
+hist(rstudent(loglogfit), col="gold")
+```
+
+
+This is definietely a better fit than the previous fit. You can see that the R-quared value has risen from 0.5173 to 0.8435. However, we can try to increase the R-quared by adding a variable.
+
+```{r message=FALSE, warning=FALSE}
+loglog_A_fit <- lm(log(C) ~ A+log(A) + log(B))
+summary(loglog_A_fit)
+anova(loglog_A_fit)
+par(mfrow=c(2,3))
+plot(loglog_A_fit, col="lightgreen")
+hist(rstudent(loglog_A_fit), col="lightgreen",main="studentized(A+log)")
+```
+This is a very good model, the R-squared value is 0.9216 and the standaradized residuals have a normal distribution with a residual standard error of only 0.2941. We will try to explore a couple more variations to see if we can maximize the goodness of fit.  
+```{r message=FALSE, warning=FALSE}
+log_logA_B_fit <- lm(log(C) ~ log(A) + B)
+summary(log_logA_B_fit)
+anova(log_logA_B_fit)
+par(mfrow=c(2,3))
+plot(log_logA_B_fit, col="yellow")
+hist(rstudent(log_logA_B_fit), col="yellow",main="studentized(logA+B)")
+```
+
+```{r message=FALSE, warning=FALSE}
+log_A_logA_B_fit <- lm(log(C) ~ A+log(A) + B)
+summary(log_A_logA_B_fit)
+anova(log_A_logA_B_fit)
+par(mfrow=c(2,3))
+plot(log_A_logA_B_fit, col="darkgreen")
+hist(rstudent(log_A_logA_B_fit), col="darkgreen",main="studentized(logA+A+B)")
+```
+
+
+This last results shows the best fit. The R-quared value for the model is 0.9474 which is greater than our previous best fit model. However, the residual standard error is 0.312 whihc is lower than our previous best fit model. Looking at the plots you can see that the distribution of the standardaized residuals is more skewed and the lines don't fit the model as well as the previous model. You could say that we have overfitted the model.  
+
+
+Conclusion:  
+Both of the green models are considered to have very good fit, but the best fitted model is not always the best model. We can conclude that the last model has the best fit but the best regression model to explain the relationship between C explained by A, B is the light green model: 
+```{r}
+summary(loglog_A_fit)
+```
+
